@@ -1,0 +1,27 @@
+{
+  "name": "ap-youtube-uploader-rufait",
+  "version": "0.0.2",
+  "description": "",
+  "private": false,
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -w",
+    "pack": "npm pack",
+    "clean": "rmdir /s /q dist & del /q *.tgz"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@activepieces/pieces-framework": "^0.20.1",
+    "googleapis": "^164.1.0"
+  }
+}
