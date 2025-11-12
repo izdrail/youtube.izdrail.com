@@ -1,7 +1,7 @@
 {
   "name": "youtube-upload-activepieces",
-  "version": "0.0.3",
-  "description": "",
+  "version": "0.0.4",
+  "description": "A powerful Activepieces plugin that enables seamless video uploads to YouTube through the YouTube Data API.",
   "private": false,
   "main": "dist/index.js",
   "scripts": {
