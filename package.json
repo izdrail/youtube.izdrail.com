@@ -23,5 +23,9 @@
   "dependencies": {
     "@activepieces/pieces-framework": "^0.20.1",
     "googleapis": "^164.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/izdrail/youtube.izdrail.com"
   }
 }
