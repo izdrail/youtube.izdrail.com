@@ -3,12 +3,12 @@ import { googleAuth } from './auth';
 import { uploadVideo } from './actions/upload-video';
 
 export const youtubeUploader = createPiece({
-  displayName: 'YouTube Uploader (Internal)',
-  description: 'Internal-only piece to upload a video to YouTube.',
+  displayName: 'YouTube Upload',
+  description: 'Piece to upload a video to YouTube.',
 
   // ✅ required by your framework build
-  logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg',
-  authors: ['You'], // change to your name or org
+  logoUrl: 'https://avatars.githubusercontent.com/u/76781411?s=200&v=4',
+  authors: ['Stefan Bogdan'],
 
   auth: googleAuth,
   actions: [uploadVideo],

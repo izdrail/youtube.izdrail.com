@@ -1,6 +1,6 @@
 {
-  "name": "ap-youtube-uploader-rufait",
-  "version": "0.0.2",
+  "name": "youtube-upload-activepieces",
+  "version": "0.0.1",
   "description": "",
   "private": false,
   "main": "dist/index.js",
@@ -11,9 +11,9 @@
     "pack": "npm pack",
     "clean": "rmdir /s /q dist & del /q *.tgz"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["active-pieces", "YouTube", "upload"],
+  "author": "Stefan Bogdan",
+  "license": "CC-04",
   "type": "commonjs",
   "devDependencies": {
     "@types/node": "^24.9.1",
