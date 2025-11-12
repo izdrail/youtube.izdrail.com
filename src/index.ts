@@ -7,7 +7,7 @@ export const youtubeUploader = createPiece({
   description: 'Piece to upload a video to YouTube.',
 
   // ✅ required by your framework build
-  logoUrl: 'https://avatars.githubusercontent.com/u/76781411?s=200&v=4',
+  logoUrl: 'https://laravelcompany.com/logo.svg',
   authors: ['Stefan Bogdan'],
 
   auth: googleAuth,
