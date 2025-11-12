@@ -11,7 +11,7 @@
     "pack": "npm pack",
     "clean": "rmdir /s /q dist & del /q *.tgz"
   },
-  "keywords": ["active-pieces", "YouTube", "upload"],
+  "keywords": ["YouTube", "Upload", "Laravel Company"],
   "author": "Stefan Bogdan",
   "license": "CC-04",
   "type": "commonjs",
