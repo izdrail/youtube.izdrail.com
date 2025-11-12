@@ -4,7 +4,7 @@ exports.googleAuth = void 0;
 const pieces_framework_1 = require("@activepieces/pieces-framework");
 exports.googleAuth = pieces_framework_1.PieceAuth.OAuth2({
     required: true,
-    description: 'Connect to youtube.',
+    description: 'Connect your Google account that owns the target YouTube channel.',
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     scope: [

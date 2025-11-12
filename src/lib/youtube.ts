@@ -1,118 +1,87 @@
 import { google, youtube_v3 } from 'googleapis';
 import { Readable } from 'stream';
 
-export interface UploadResult {
+export type UploadResult = {
   videoId: string;
   url: string;
-  privacy: 'public' | 'unlisted' | 'private';
-}
+  privacy: 'public'|'unlisted'|'private';
+};
 
-interface FileObject {
-  data?: Buffer;
-  fileName?: string;
-  filename?: string;
-  mimeType?: string;
-  type?: string;
-  path?: string;
-}
+type MaybeFile =
+  | { data?: Buffer; fileName?: string; filename?: string; mimeType?: string; type?: string; path?: string; }
+  | Buffer
+  | string; // fallback
 
-type MaybeFile = FileObject | Buffer | string;
+// Convert various “file” shapes from pieces into a Readable stream + meta
+function toReadable(file: MaybeFile): { body: Readable; fileName?: string; mimeType?: string } {
+  if (!file) throw new Error('No file received.');
 
-interface ReadableFile {
-  body: Readable;
-  fileName?: string;
-  mimeType?: string;
-}
-
-interface UploadParams {
-  auth: any;
-  file: MaybeFile;
-  title: string;
-  description: string;
-  privacyStatus: 'public' | 'unlisted' | 'private';
-}
-
-/**
- * Converts various file formats into a Readable stream with metadata.
- * Supports Buffer, file path string, and file objects from automation platforms.
- */
-function toReadable(file: MaybeFile): ReadableFile {
-  if (!file) {
-    throw new Error('No file provided.');
-  }
-
+  // Buffer directly
   if (Buffer.isBuffer(file)) {
     return { body: Readable.from(file) };
   }
 
+  // If it’s a path string
   if (typeof file === 'string') {
+    // Treat as a path
+    // Lazy require to avoid fs in web contexts
     const fs = require('fs');
     return { body: fs.createReadStream(file) };
   }
 
-  // Handle file objects from automation platforms
-  const fileObj = file as FileObject;
-  const fileName = fileObj.fileName ?? fileObj.filename;
-  const mimeType = fileObj.mimeType ?? fileObj.type;
+  // Object shapes used by automation platforms
+  const f: any = file;
+  const fileName = f.fileName ?? f.filename;
+  const mimeType = f.mimeType ?? f.type;
 
-  if (fileObj.path) {
+  if (f.path) {
     const fs = require('fs');
-    return {
-      body: fs.createReadStream(fileObj.path),
-      fileName,
-      mimeType
-    };
+    return { body: fs.createReadStream(f.path), fileName, mimeType };
+  }
+  if (f.data && Buffer.isBuffer(f.data)) {
+    return { body: Readable.from(f.data), fileName, mimeType };
   }
 
-  if (fileObj.data && Buffer.isBuffer(fileObj.data)) {
-    return {
-      body: Readable.from(fileObj.data),
-      fileName,
-      mimeType
-    };
-  }
-
-  throw new Error('Unsupported file format. Provide a Buffer, file path, or file object.');
+  throw new Error('Unsupported file format. Provide a file Buffer or a path.');
 }
 
-/**
- * Builds an OAuth2 client for Google APIs.
- * Supports authentication from platform connections or environment variables.
- */
 export async function buildOAuth2Client(auth: any) {
+  // Activepieces typically provides tokens on ctx.auth. Client ID/secret
+  // can be provided by the platform; if not, fall back to env.
   const clientId = auth?.client_id ?? process.env.GOOGLE_CLIENT_ID;
   const clientSecret = auth?.client_secret ?? process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = auth?.redirect_url ?? 'https://developers.google.com/oauthplayground';
+  const redirectUri = auth?.redirect_url ?? 'https://developers.google.com/oauthplayground'; // not used at runtime
 
   if (!clientId || !clientSecret) {
-    throw new Error(
-        'Missing Google OAuth credentials. Configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET ' +
-        'environment variables or provide them via platform connection.'
-    );
+    throw new Error('Missing Google OAuth client. Configure GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET or platform connection data.');
   }
 
   const oAuth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
-
   oAuth2Client.setCredentials({
     access_token: auth?.access_token,
     refresh_token: auth?.refresh_token,
+    // use null if we don’t have an expiry timestamp
     expiry_date: auth?.expires_at ? new Date(auth.expires_at).getTime() : null,
   });
+
 
   return oAuth2Client;
 }
 
-/**
- * Uploads a video file to YouTube with specified metadata and privacy settings.
- * Returns video ID, URL, and privacy status upon successful upload.
- */
-export async function uploadToYouTube(params: UploadParams): Promise<UploadResult> {
+export async function uploadToYouTube(params: {
+  auth: any;
+  file: MaybeFile;
+  title: string;
+  description: string;
+  privacyStatus: 'public'|'unlisted'|'private';
+}): Promise<UploadResult> {
   const oAuth2Client = await buildOAuth2Client(params.auth);
   const yt = google.youtube({ version: 'v3', auth: oAuth2Client });
 
-  const { body, mimeType } = toReadable(params.file);
+  const { body, fileName, mimeType } = toReadable(params.file);
 
-  const res = await yt.videos.insert({
+  // Perform resumable upload
+  const res = await (yt.videos.insert as any)({
     part: ['snippet', 'status'],
     requestBody: {
       snippet: {
@@ -127,12 +96,14 @@ export async function uploadToYouTube(params: UploadParams): Promise<UploadResul
       mimeType: mimeType ?? 'video/*',
       body,
     },
+    uploadType: 'resumable',
   });
 
-  const videoId = res.data.id;
+  const video: youtube_v3.Schema$Video = res?.data;
+  const videoId = video?.id;
 
   if (!videoId) {
-    throw new Error('Upload succeeded but no video ID was returned.');
+    throw new Error('Upload completed but no videoId returned.');
   }
 
   return {
